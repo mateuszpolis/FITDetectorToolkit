@@ -11,4 +11,4 @@ __email__ = "mateusz.polis@cern.ch"
 
 from .main import FITDetectorToolkit
 
-__all__ = ["FITDetectorToolkit"] 
+__all__ = ["FITDetectorToolkit"]

@@ -79,6 +79,23 @@ To add a new module to the toolkit:
 
 ## Development
 
+### Quick Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/mateuszpolis/FITDetectorToolkit.git
+cd FITDetectorToolkit
+
+# Run the setup script (recommended)
+./scripts/setup-dev.sh
+
+# Or manually:
+pip install -e .[dev]
+pre-commit install --hook-type pre-commit
+pre-commit install --hook-type commit-msg
+npm install
+```
+
 ### Project Structure
 
 ```
@@ -87,41 +104,121 @@ FITDetectorToolkit/
 │   ├── __init__.py          # Package initialization
 │   └── main.py              # Main application
 ├── tests/                   # Test files
+├── examples/                # Usage examples
+├── scripts/                 # Development scripts
+├── .github/workflows/       # GitHub Actions
 ├── pyproject.toml          # Project configuration
 ├── setup.py                # Setup script
+├── package.json            # Node.js dependencies
+├── .releaserc.json         # Semantic release config
+├── .pre-commit-config.yaml # Pre-commit hooks
 └── README.md               # This file
+```
+
+### Pre-commit Hooks
+
+The project uses pre-commit hooks to ensure code quality:
+
+- **Commitizen**: Enforces conventional commit messages
+- **Black**: Code formatting
+- **Flake8**: Linting
+- **isort**: Import sorting
+- **MyPy**: Type checking
+- **Bandit**: Security checks
+- **pytest**: Test running
+
+```bash
+# Install hooks
+pre-commit install --hook-type pre-commit
+pre-commit install --hook-type commit-msg
+
+# Run manually
+pre-commit run --all-files
+```
+
+### Commit Message Format
+
+The project uses [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+Types:
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Formatting changes
+- `refactor`: Code refactoring
+- `test`: Adding tests
+- `chore`: Maintenance tasks
+
+Examples:
+```bash
+git commit -m "feat: add new module installation feature"
+git commit -m "fix: resolve threading issue in GUI"
+git commit -m "docs: update installation instructions"
 ```
 
 ### Running Tests
 
 ```bash
-# Install development dependencies
-pip install -e .[dev]
-
-# Run tests
+# Run all tests
 pytest
 
 # Run with coverage
-pytest --cov=fitdetectortoolkit
+pytest --cov=fitdetectortoolkit --cov-report=html
+
+# Run specific test file
+pytest tests/test_main.py -v
 ```
 
-### Code Style
-
-The project uses:
-- **Black** for code formatting
-- **Flake8** for linting
-- **MyPy** for type checking
+### Code Quality Checks
 
 ```bash
 # Format code
 black .
+
+# Sort imports
+isort .
 
 # Check linting
 flake8
 
 # Type checking
 mypy fitdetectortoolkit/
+
+# Security scan
+bandit -r .
 ```
+
+### CI/CD Pipeline
+
+The project uses GitHub Actions for continuous integration:
+
+1. **Tests**: Runs on multiple Python versions and OS
+2. **Code Quality**: Black, Flake8, MyPy, Bandit
+3. **Security**: Safety checks
+4. **Release**: Automatic semantic versioning
+
+### Automatic Releases
+
+Releases are automatically created based on commit messages:
+
+- `feat:` → Minor version bump
+- `fix:` → Patch version bump
+- `BREAKING CHANGE:` → Major version bump
+
+The release process:
+1. Analyzes commit messages
+2. Determines next version
+3. Updates version files
+4. Creates GitHub release
+5. Publishes to PyPI (if configured)
 
 ## Configuration
 
@@ -176,4 +273,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Acknowledgments
 
 - CERN for the detector analysis context
-- The Python community for excellent tools and libraries 
+- The Python community for excellent tools and libraries
