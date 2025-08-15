@@ -80,54 +80,89 @@ class TestModuleManager:
 class TestFITDetectorToolkit:
     """Test the FITDetectorToolkit class."""
 
-    @patch("tkinter.Tk")
-    @patch("tkinter.ttk.Style")
-    def test_init(self, mock_style: Mock, mock_tk: Mock) -> None:
+    @patch("fitdetectortoolkit.main.font.Font")
+    @patch("fitdetectortoolkit.main.ttk.Style")
+    @patch("fitdetectortoolkit.main.tk.Tk")
+    def test_init(self, mock_tk: Mock, mock_style: Mock, mock_font: Mock) -> None:
         """Test FITDetectorToolkit initialization."""
+        # Create mock objects
         mock_root = Mock()
         mock_tk.return_value = mock_root
         mock_style_instance = Mock()
         mock_style.return_value = mock_style_instance
 
-        with patch.object(FITDetectorToolkit, "setup_ui") as mock_setup:
-            FITDetectorToolkit()
-            mock_setup.assert_called_once()
-            mock_root.title.assert_called_with("FIT Detector Toolkit")
+        # Mock font creation
+        mock_font_instance = Mock()
+        mock_font.return_value = mock_font_instance
 
-    @patch("tkinter.Tk")
-    @patch("tkinter.ttk.Style")
-    def test_configure_styles(self, mock_style: Mock, mock_tk: Mock) -> None:
+        with patch.object(FITDetectorToolkit, "setup_ui") as mock_setup:
+            with patch.object(FITDetectorToolkit, "center_window"):
+                with patch.object(
+                    FITDetectorToolkit, "create_main_frame"
+                ) as mock_create_frame:
+                    mock_frame = Mock()
+                    mock_create_frame.return_value = mock_frame
+                    app = FITDetectorToolkit()
+                    mock_setup.assert_called_once()
+                    mock_root.title.assert_called_with("FIT Detector Toolkit")
+                    assert hasattr(app, "root")
+
+    @patch("fitdetectortoolkit.main.font.Font")
+    @patch("fitdetectortoolkit.main.ttk.Style")
+    @patch("fitdetectortoolkit.main.tk.Tk")
+    def test_configure_styles(
+        self, mock_tk: Mock, mock_style: Mock, mock_font: Mock
+    ) -> None:
         """Test style configuration."""
-        # Create a proper mock root with required attributes
+        # Create mock objects
         mock_root = Mock()
-        mock_root._last_child_ids = {}
-        mock_root.tk = Mock()
         mock_tk.return_value = mock_root
         mock_style_instance = Mock()
         mock_style.return_value = mock_style_instance
 
+        # Mock font creation
+        mock_font_instance = Mock()
+        mock_font.return_value = mock_font_instance
+
         with patch.object(FITDetectorToolkit, "setup_ui") as mock_setup:
-            app = FITDetectorToolkit()  # noqa: F841
-            mock_setup.assert_called_once()
+            with patch.object(FITDetectorToolkit, "center_window"):
+                with patch.object(
+                    FITDetectorToolkit, "create_main_frame"
+                ) as mock_create_frame:
+                    mock_frame = Mock()
+                    mock_create_frame.return_value = mock_frame
+                    app = FITDetectorToolkit()
+                    mock_setup.assert_called_once()
 
         # Verify that styles were configured
         assert hasattr(app, "style")
 
-    @patch("tkinter.Tk")
-    @patch("tkinter.ttk.Style")
-    def test_install_module(self, mock_style: Mock, mock_tk: Mock) -> None:
+    @patch("fitdetectortoolkit.main.font.Font")
+    @patch("fitdetectortoolkit.main.ttk.Style")
+    @patch("fitdetectortoolkit.main.tk.Tk")
+    def test_install_module(
+        self, mock_tk: Mock, mock_style: Mock, mock_font: Mock
+    ) -> None:
         """Test module installation."""
-        # Create a proper mock root with required attributes
+        # Create mock objects
         mock_root = Mock()
-        mock_root._last_child_ids = {}
-        mock_root.tk = Mock()
         mock_tk.return_value = mock_root
         mock_style_instance = Mock()
         mock_style.return_value = mock_style_instance
 
+        # Mock font creation
+        mock_font_instance = Mock()
+        mock_font.return_value = mock_font_instance
+
         with patch.object(FITDetectorToolkit, "setup_ui") as mock_setup:
-            app = FITDetectorToolkit()
-            mock_setup.assert_called_once()
+            with patch.object(FITDetectorToolkit, "center_window"):
+                with patch.object(
+                    FITDetectorToolkit, "create_main_frame"
+                ) as mock_create_frame:
+                    mock_frame = Mock()
+                    mock_create_frame.return_value = mock_frame
+                    app = FITDetectorToolkit()
+                    mock_setup.assert_called_once()
 
         # Mock the status_var to avoid AttributeError
         app.status_var = Mock()
@@ -142,21 +177,32 @@ class TestFITDetectorToolkit:
                 # Just verify the method exists and can be called
                 assert hasattr(app, "install_module")
 
-    @patch("tkinter.Tk")
-    @patch("tkinter.ttk.Style")
-    def test_launch_module(self, mock_style: Mock, mock_tk: Mock) -> None:
+    @patch("fitdetectortoolkit.main.font.Font")
+    @patch("fitdetectortoolkit.main.ttk.Style")
+    @patch("fitdetectortoolkit.main.tk.Tk")
+    def test_launch_module(
+        self, mock_tk: Mock, mock_style: Mock, mock_font: Mock
+    ) -> None:
         """Test module launching."""
-        # Create a proper mock root with required attributes
+        # Create mock objects
         mock_root = Mock()
-        mock_root._last_child_ids = {}
-        mock_root.tk = Mock()
         mock_tk.return_value = mock_root
         mock_style_instance = Mock()
         mock_style.return_value = mock_style_instance
 
+        # Mock font creation
+        mock_font_instance = Mock()
+        mock_font.return_value = mock_font_instance
+
         with patch.object(FITDetectorToolkit, "setup_ui") as mock_setup:
-            app = FITDetectorToolkit()
-            mock_setup.assert_called_once()
+            with patch.object(FITDetectorToolkit, "center_window"):
+                with patch.object(
+                    FITDetectorToolkit, "create_main_frame"
+                ) as mock_create_frame:
+                    mock_frame = Mock()
+                    mock_create_frame.return_value = mock_frame
+                    app = FITDetectorToolkit()
+                    mock_setup.assert_called_once()
 
         # Mock the status_var to avoid AttributeError
         app.status_var = Mock()
