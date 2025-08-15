@@ -5,10 +5,13 @@ Thank you for your interest in contributing to FIT Detector Toolkit! This docume
 ## Table of Contents
 
 - [Code of Conduct](#code-of-conduct)
+- [Contribution Workflow](#contribution-workflow)
 - [Getting Started](#getting-started)
 - [Development Setup](#development-setup)
 - [Code Standards](#code-standards)
 - [Testing](#testing)
+- [Adding New Modules](#adding-new-modules)
+- [Module Development Guidelines](#module-development-guidelines)
 - [Pull Request Process](#pull-request-process)
 - [Commit Message Guidelines](#commit-message-guidelines)
 - [Reporting Issues](#reporting-issues)
@@ -25,6 +28,27 @@ This project and everyone participating in it is governed by our Code of Conduct
 - **Be collaborative** and open to different viewpoints
 - **Be constructive** in feedback and discussions
 - **Be professional** in all interactions
+
+## Contribution Workflow
+
+### Important: Pull Request Only Policy
+
+**⚠️ CRITICAL: You CANNOT push directly to the main branch!**
+
+- **Fork the repository** to your GitHub account
+- **Create a feature branch** for your changes
+- **Submit a Pull Request** for review and merging
+- **All changes must go through Pull Requests** - no direct pushes allowed
+- **CI pipelines will run automatically** on all Pull Requests
+- **Code quality checks must pass** before merging is allowed
+
+### Why This Policy?
+
+- **Code Quality**: Ensures all code meets our standards
+- **Code Review**: Allows maintainers to review changes
+- **CI Validation**: Automatically runs tests and quality checks
+- **Collaboration**: Fosters discussion and improvement of contributions
+- **Safety**: Prevents breaking changes from reaching the main branch
 
 ## Getting Started
 
@@ -62,7 +86,7 @@ This project and everyone participating in it is governed by our Code of Conduct
 # Install the package in development mode
 pip install -e .[dev]
 
-# Install pre-commit hooks
+# Install pre-commit hooks (MANDATORY)
 pre-commit install --hook-type pre-commit
 pre-commit install --hook-type commit-msg
 
@@ -198,6 +222,158 @@ tests/
     └── test_gui.py
 ```
 
+## Adding New Modules
+
+### Overview
+
+The FIT Detector Toolkit is designed to launch programs for **offline analysis related to the FIT detector**. New modules should follow this purpose and integrate seamlessly with the toolkit's module management system.
+
+### How to Add a New Module
+
+#### 1. **Fork and Clone** (if you haven't already)
+```bash
+git clone https://github.com/YOUR_USERNAME/FITDetectorToolkit.git
+cd FITDetectorToolkit
+git remote add upstream https://github.com/mateuszpolis/FITDetectorToolkit.git
+```
+
+#### 2. **Create a Feature Branch**
+```bash
+git checkout main
+git pull upstream main
+git checkout -b feature/add-new-module
+```
+
+#### 3. **Add Module Configuration**
+Edit `fitdetectortoolkit/main.py` and add your module to the `modules` dictionary in the `ModuleManager.load_modules_config()` method:
+
+```python
+self.modules = {
+    "AgeingAnalysis": {
+        "url": "https://github.com/mateuszpolis/AgeingAnalysis.git",
+        "branch": "main",
+        "description": "Analyze and visualize ageing factors in the FIT detector.",
+        "entry_point": "ageing_analysis.main",
+        "installed": False,
+        "version": "latest",
+        "icon": "📊",
+    },
+    "YourNewModule": {  # Add your module here
+        "url": "https://github.com/yourusername/your-module.git",
+        "branch": "main",
+        "description": "Brief description of what your module does for FIT detector analysis.",
+        "entry_point": "your_module.main",
+        "installed": False,
+        "version": "latest",
+        "icon": "🔬",  # Choose an appropriate emoji icon
+    }
+}
+```
+
+#### 4. **Test Your Changes**
+```bash
+# Run tests to ensure nothing is broken
+pytest tests/ -v
+
+# Test the module installation (if you have access to the repository)
+python -m fitdetectortoolkit.main --install YourNewModule
+```
+
+#### 5. **Commit and Push**
+```bash
+git add fitdetectortoolkit/main.py
+git commit -m "feat: add YourNewModule to toolkit
+
+- Add YourNewModule for FIT detector analysis
+- Repository: https://github.com/yourusername/your-module.git
+- Entry point: your_module.main"
+git push origin feature/add-new-module
+```
+
+#### 6. **Create Pull Request**
+- Go to your fork on GitHub
+- Create a Pull Request to the main repository
+- **Base branch**: `main`
+- **Title**: `feat: add YourNewModule to toolkit`
+- **Description**: Explain what your module does and why it's useful
+
+## Module Development Guidelines
+
+### Module Requirements
+
+To be compatible with the FIT Detector Toolkit, your module must meet these requirements:
+
+#### 1. **Repository Structure**
+```
+your-module/
+├── pyproject.toml        # Preferred (modern Python packaging)
+├── setup.py              # Alternative (legacy)
+├── README.md             # Clear documentation
+├── your_module/          # Main package directory
+│   ├── __init__.py
+│   └── main.py          # Entry point function
+└── requirements.txt      # Dependencies
+```
+
+#### 2. **Entry Point Function**
+Your module must have a `main()` function that serves as the entry point:
+
+```python
+# your_module/main.py
+def main():
+    """Main entry point for the YourNewModule application."""
+    # Your application logic here
+    # This function will be called when the user clicks "Launch"
+    pass
+
+if __name__ == "__main__":
+    main()
+```
+
+#### 3. **Installation Compatibility**
+- **Prefer `pyproject.toml`** over `setup.py` (modern Python packaging)
+- Ensure your module can be installed with `pip install -e .`
+- List all dependencies clearly
+- Avoid conflicts with existing packages
+
+#### 4. **FIT Detector Focus**
+- **Purpose**: Your module should perform offline analysis related to the FIT detector
+- **Data Formats**: Support common detector data formats
+- **Output**: Provide meaningful analysis results
+- **Documentation**: Explain how it relates to FIT detector analysis
+
+#### 5. **User Experience**
+- **Standalone**: Should work independently of the toolkit
+- **Clear Interface**: Intuitive user interface or command-line interface
+- **Error Handling**: Graceful error handling with helpful messages
+- **Progress Feedback**: Show progress for long-running operations
+
+### Example Module Structure
+
+```python
+# Example: FIT Detector Calibration Module
+self.modules = {
+    "FITCalibration": {
+        "url": "https://github.com/username/fit-calibration.git",
+        "branch": "main",
+        "description": "Calibrate and validate FIT detector parameters using offline data analysis.",
+        "entry_point": "fit_calibration.main",
+        "installed": False,
+        "version": "latest",
+        "icon": "⚡",
+    }
+}
+```
+
+### Testing Your Module
+
+Before submitting a Pull Request:
+
+1. **Test Installation**: Ensure your module installs correctly
+2. **Test Launch**: Verify the module launches without errors
+3. **Test Integration**: Confirm it works with the toolkit's module manager
+4. **Run Toolkit Tests**: Ensure no existing functionality is broken
+
 ## Pull Request Process
 
 ### Before Submitting
@@ -206,13 +382,14 @@ tests/
 2. **Check code quality**: Run `pre-commit run --all-files`
 3. **Update documentation**: Update README, docstrings, and other docs as needed
 4. **Add tests**: Include tests for new functionality
+5. **Verify CI compliance**: Your code must pass all CI checks
 
 ### Creating a Pull Request
 
-1. **Create a feature branch** from `develop`:
+1. **Create a feature branch** from `main`:
    ```bash
-   git checkout develop
-   git pull upstream develop
+   git checkout main
+   git pull upstream main
    git checkout -b feature/your-feature-name
    ```
 
@@ -224,10 +401,34 @@ tests/
    ```
 
 4. **Create a Pull Request** on GitHub:
-   - **Base branch**: `develop`
+   - **Base branch**: `main`
    - **Title**: Follow commit message format
    - **Description**: Explain what the PR does and why
    - **Checklist**: Use the PR template
+
+### CI Pipeline Requirements
+
+**⚠️ IMPORTANT: All CI checks must pass before merging!**
+
+Your Pull Request will automatically run:
+
+1. **Code Quality Checks**:
+   - Black formatting
+   - isort import sorting
+   - Flake8 linting
+   - MyPy type checking
+   - Bandit security scanning
+
+2. **Tests**:
+   - Python 3.8, 3.9, 3.10, 3.11, 3.12
+   - Ubuntu, macOS, Windows
+   - Code coverage requirements
+
+3. **Security Scan**:
+   - Bandit vulnerability scanning
+   - Safety dependency checks
+
+**If any check fails, your PR cannot be merged until it's fixed.**
 
 ### Pull Request Template
 
@@ -245,6 +446,7 @@ Brief description of what this PR accomplishes.
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] All tests pass locally
 - [ ] Code quality checks pass
+- [ ] Pre-commit hooks pass
 
 ## Checklist
 - [ ] My code follows the style guidelines of this project
@@ -254,6 +456,8 @@ Brief description of what this PR accomplishes.
 - [ ] My changes generate no new warnings
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] New and existing unit tests pass locally with my changes
+- [ ] I have installed and configured pre-commit hooks
+- [ ] All CI checks pass (code quality, tests, security)
 ```
 
 ## Commit Message Guidelines
@@ -286,9 +490,9 @@ We use [Conventional Commits](https://www.conventionalcommits.org/) for commit m
 ### Examples
 
 ```bash
-git commit -m "feat: add module version checking"
+git commit -m "feat: add FITCalibration module to toolkit"
 git commit -m "fix: resolve threading issue in GUI"
-git commit -m "docs: update installation instructions"
+git commit -m "docs: update module development guidelines"
 git commit -m "test: add tests for module installation"
 git commit -m "refactor: simplify module configuration loading"
 ```

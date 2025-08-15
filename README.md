@@ -1,14 +1,20 @@
 # FIT Detector Toolkit
 
-A modular Python toolkit for detector analysis that automatically manages and launches analysis modules from GitHub repositories.
+A modular Python toolkit for **offline analysis related to the FIT detector** that automatically manages and launches analysis modules from GitHub repositories.
+
+## Overview
+
+The FIT Detector Toolkit is designed specifically for researchers and engineers working with the FIT detector system. It provides a centralized platform to discover, install, and launch various analysis tools and modules that help with detector calibration, data analysis, ageing studies, and other offline analysis tasks.
 
 ## Features
 
+- **FIT Detector Focus**: Specifically designed for FIT detector offline analysis
 - **Modular Design**: Easily add and manage analysis modules from GitHub repositories
 - **Automatic Installation**: One-click installation of modules with dependency management
-- **Beautiful GUI**: Modern, intuitive tkinter-based interface
+- **Beautiful GUI**: Modern, card-based tkinter interface with professional styling
 - **Cross-Platform**: Works on Windows, macOS, and Linux
 - **Extensible**: Simple configuration to add new modules
+- **Quality Assurance**: Integrated CI/CD pipeline ensures code quality and security
 
 ## Installation
 
@@ -43,39 +49,74 @@ fitdetectortoolkit
 ### Using the GUI
 
 1. **Launch the Application**: Start the FITDetectorToolkit application
-2. **Install Modules**: Click the "Install" button next to any module you want to use
-3. **Launch Modules**: Once installed, click "Launch" to run the analysis module
-4. **Monitor Status**: Check the status bar at the bottom for installation and launch progress
+2. **Browse Modules**: View available analysis modules in the card-based interface
+3. **Install Modules**: Click the "Install" button next to any module you want to use
+4. **Launch Modules**: Once installed, click "Launch" to run the analysis module
+5. **Monitor Status**: Check the status bar at the bottom for installation and launch progress
+
+### Command Line Usage
+
+```bash
+# List available modules
+fitdetectortoolkit --list-modules
+
+# Install a specific module
+fitdetectortoolkit --install AgeingAnalysis
+
+# Launch a specific module
+fitdetectortoolkit --launch AgeingAnalysis
+```
 
 ## Available Modules
 
 ### AgeingAnalysis
 - **Repository**: https://github.com/mateuszpolis/AgeingAnalysis
-- **Description**: Analysis tools for detector ageing studies
+- **Description**: Analysis tools for detector ageing studies and visualization
 - **Entry Point**: `ageing_analysis.main`
+- **Icon**: 📊
 
 ## Adding New Modules
 
-To add a new module to the toolkit:
+### For End Users
 
-1. **Edit the Configuration**: Modify the `modules` dictionary in `ModuleManager.load_modules_config()`
-2. **Module Configuration**:
-   ```python
-   "ModuleName": {
-       "url": "https://github.com/username/repository.git",
-       "branch": "main",
-       "description": "Description of the module",
-       "entry_point": "module.package.main",
-       "installed": False,
-       "version": "latest"
-   }
-   ```
+To add a new module to the toolkit, you need to:
+
+1. **Fork the repository** to your GitHub account
+2. **Create a feature branch** for your changes
+3. **Add module configuration** to the toolkit
+4. **Submit a Pull Request** for review and merging
+
+**⚠️ IMPORTANT: You cannot push directly to the main branch. All changes must go through Pull Requests.**
+
+### Module Configuration
+
+To add a new module, edit the `modules` dictionary in `ModuleManager.load_modules_config()`:
+
+```python
+"YourNewModule": {
+    "url": "https://github.com/yourusername/your-module.git",
+    "branch": "main",
+    "description": "Brief description of what your module does for FIT detector analysis.",
+    "entry_point": "your_module.main",
+    "installed": False,
+    "version": "latest",
+    "icon": "🔬",  # Choose an appropriate emoji icon
+}
+```
 
 ### Module Requirements
 
-- Must have a `pyproject.toml` or `setup.py` for installation
-- Should have a main entry point function
-- Repository should be publicly accessible
+Your module must meet these requirements to be compatible:
+
+- **Repository Structure**: Must have `pyproject.toml` (preferred) or `setup.py`
+- **Entry Point**: Must have a `main()` function that serves as the entry point
+- **Installation**: Must be installable with `pip install -e .`
+- **Purpose**: Should perform offline analysis related to the FIT detector
+- **Standalone**: Should work independently of the toolkit
+
+### Detailed Guidelines
+
+For comprehensive module development guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md#module-development-guidelines).
 
 ## Development
 
@@ -102,16 +143,18 @@ npm install
 FITDetectorToolkit/
 ├── fitdetectortoolkit/
 │   ├── __init__.py          # Package initialization
-│   └── main.py              # Main application
+│   └── main.py              # Main application with BaseGUI
 ├── tests/                   # Test files
 ├── examples/                # Usage examples
 ├── scripts/                 # Development scripts
-├── .github/workflows/       # GitHub Actions
+├── .github/workflows/       # GitHub Actions CI/CD
 ├── pyproject.toml          # Project configuration
 ├── setup.py                # Setup script
 ├── package.json            # Node.js dependencies
 ├── .releaserc.json         # Semantic release config
 ├── .pre-commit-config.yaml # Pre-commit hooks
+├── CONTRIBUTING.md         # Contribution guidelines
+├── LICENSE                 # MIT License
 └── README.md               # This file
 ```
 
@@ -128,7 +171,7 @@ The project uses pre-commit hooks to ensure code quality:
 - **pytest**: Test running
 
 ```bash
-# Install hooks
+# Install hooks (MANDATORY for contributors)
 pre-commit install --hook-type pre-commit
 pre-commit install --hook-type commit-msg
 
@@ -200,10 +243,12 @@ bandit -r .
 
 The project uses GitHub Actions for continuous integration:
 
-1. **Tests**: Runs on multiple Python versions and OS
-2. **Code Quality**: Black, Flake8, MyPy, Bandit
-3. **Security**: Safety checks
+1. **Code Quality**: Black, Flake8, MyPy, Bandit, isort
+2. **Tests**: Runs on Python 3.8-3.12 across Ubuntu, macOS, and Windows
+3. **Security**: Bandit vulnerability scanning and Safety dependency checks
 4. **Release**: Automatic semantic versioning
+
+**⚠️ IMPORTANT: All CI checks must pass before Pull Requests can be merged.**
 
 ### Automatic Releases
 
@@ -235,15 +280,22 @@ The toolkit stores module configurations in:
    - Check internet connection
    - Verify repository URL is correct
    - Ensure repository is publicly accessible
+   - Check that the module has proper `pyproject.toml` or `setup.py`
 
 2. **Module Launch Fails**
    - Verify module is properly installed
    - Check entry point configuration
    - Review module's main function
+   - Ensure the module has a `main()` function
 
 3. **Permission Errors**
    - Ensure write permissions to `~/.fitdetectortoolkit/`
    - Run with appropriate user permissions
+
+4. **CI Pipeline Failures**
+   - Run `pre-commit run --all-files` locally
+   - Ensure all tests pass with `pytest`
+   - Check code formatting with `black .` and `isort .`
 
 ### Debug Mode
 
@@ -255,16 +307,41 @@ python -m fitdetectortoolkit.main
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Ensure all tests pass
-6. Submit a pull request
+We welcome contributions! However, please note our contribution policy:
+
+**⚠️ CRITICAL: You CANNOT push directly to the main branch!**
+
+### Contribution Process
+
+1. **Fork the repository** to your GitHub account
+2. **Create a feature branch** for your changes
+3. **Install pre-commit hooks** (mandatory)
+4. **Make your changes** following our code standards
+5. **Test thoroughly** - ensure all tests pass
+6. **Submit a Pull Request** for review and merging
+
+### Before Contributing
+
+- **Read [CONTRIBUTING.md](CONTRIBUTING.md)** for detailed guidelines
+- **Install pre-commit hooks** to ensure code quality
+- **Run tests locally** before submitting
+- **Follow commit message conventions**
+
+### CI Requirements
+
+Your Pull Request must pass all CI checks:
+- Code quality (Black, Flake8, MyPy, Bandit, isort)
+- Tests on all supported Python versions and OS
+- Security scanning
+- Code coverage requirements
+
+**If any check fails, your PR cannot be merged until it's fixed.**
+
+For detailed contribution guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Authors
 
@@ -272,5 +349,12 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Acknowledgments
 
-- CERN for the detector analysis context
-- The Python community for excellent tools and libraries
+- **CERN** for the detector analysis context and FIT detector system
+- The **Python community** for excellent tools and libraries
+- **Contributors** who help improve the toolkit
+
+## Support
+
+- **Issues**: Report bugs and request features via [GitHub Issues](https://github.com/mateuszpolis/FITDetectorToolkit/issues)
+- **Discussions**: Ask questions and share ideas via [GitHub Discussions](https://github.com/mateuszpolis/FITDetectorToolkit/discussions)
+- **Documentation**: See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development guidelines
