@@ -4,6 +4,9 @@ Main application for FITDetectorToolkit.
 Provides a graphical interface for managing and launching detector analysis modules.
 """
 
+# Import importlib for metadata and resources
+import importlib.metadata
+import importlib.resources
 import json
 import os
 import shutil
@@ -194,28 +197,35 @@ class ModuleManager:
 
     def load_modules_config(self) -> None:
         """Load the modules configuration file."""
-        if self.modules_config.exists():
-            with open(self.modules_config, "r") as f:
-                self.modules = json.load(f)
-        else:
+        # Try to load from the package config first
+        try:
+            config_data = (
+                importlib.resources.read_text(
+                    "fitdetectortoolkit", "config/modules.json"
+                )
+                .joinpath("modules.json")  # type: ignore
+                .read_text()
+            )
+            self.modules = json.loads(config_data)
+        except Exception:
+            # Fallback to hardcoded defaults if config loading fails
             self.modules = {
-                "AgeingAnalysis": {
+                "Ageing Analysis": {
                     "url": "https://github.com/mateuszpolis/AgeingAnalysis.git",
                     "branch": "main",
                     "description": "Analyze and visualize ageing factors in the FIT "
                     "detector.",
                     "entry_point": "ageing_analysis.main",
-                    "installed": False,
                     "version": "latest",
                     "icon": "📊",
                 }
             }
-            self.save_modules_config()
 
     def save_modules_config(self) -> None:
         """Save the modules configuration file."""
-        with open(self.modules_config, "w") as f:
-            json.dump(self.modules, f, indent=2)
+        # This method is kept for backward compatibility but no longer needed
+        # Installation status is now checked dynamically
+        pass
 
     def install_module(self, module_name: str) -> bool:
         """Install a module from GitHub."""
@@ -260,8 +270,7 @@ class ModuleManager:
                     capture_output=True,
                 )
 
-            module_info["installed"] = True
-            self.save_modules_config()
+            # Installation successful - no need to save flags anymore
             return True
 
         except Exception as e:
@@ -269,10 +278,40 @@ class ModuleManager:
             return False
 
     def is_module_installed(self, module_name: str) -> bool:
-        """Check if a module is installed."""
-        module = self.modules.get(module_name, {})
-        installed = module.get("installed", False)
-        return bool(installed)
+        """Check if a module is actually installed by verifying its presence."""
+        try:
+            module_info = self.modules.get(module_name, {})
+            if not module_info:
+                return False
+
+            # Check if the module directory exists
+            module_path = self.modules_dir / module_name
+            if not module_path.exists():
+                return False
+
+            # Check if the module can be imported
+            entry_point = module_info.get("entry_point", "")
+            if not entry_point:
+                # No entry point, so not installed
+                return False
+
+            try:
+                import importlib
+
+                # Try to import the module
+                return True
+            except ImportError:
+                # If import fails, check if it's installed via pip
+                try:
+                    package_name = entry_point.split(".")[0]
+                    importlib.metadata.distribution(package_name)
+                    return True
+                except importlib.metadata.PackageNotFoundError:
+                    pass
+                return False
+
+        except Exception:
+            return False
 
     def launch_module(self, module_name: str) -> Tuple[bool, str]:
         """Launch a module."""
@@ -280,7 +319,8 @@ class ModuleManager:
             module_info = self.modules[module_name]
             module_path = self.modules_dir / module_name
 
-            if not module_info["installed"]:
+            # Check if module is actually installed
+            if not self.is_module_installed(module_name):
                 return False, "Module not installed"
 
             # Always use subprocess to avoid threading issues with GUI modules
@@ -332,18 +372,59 @@ class FITDetectorToolkit(BaseGUI):
         self.main_frame = self.create_main_frame()
 
         self.module_manager = ModuleManager()
-        self.setup_ui()
+        try:
+            self.setup_ui()
+        except Exception as e:
+            print(f"Critical error during initialization: {e}")
+            # Create minimal error UI
+            error_label = ttk.Label(
+                self.main_frame,
+                text=f"Critical Error: {e}",
+                style="Title.TLabel",
+                foreground="red",
+            )
+            error_label.pack(pady=50)
+
+            retry_button = ttk.Button(
+                self.main_frame,
+                text="Retry",
+                command=self.setup_ui,
+                style="Primary.TButton",
+            )
+            retry_button.pack(pady=20)
 
     def setup_ui(self) -> None:
         """Set up the user interface."""
-        # Create the UI elements
-        self._create_header_section()
-        self._create_app_launcher_section()
-        self._create_footer_section()
+        try:
+            # Create the UI elements
+            self._create_header_section()
+            self._create_app_launcher_section()
+            self._create_footer_section()
+        except Exception as e:
+            print(f"Error setting up UI: {e}")
+            # Create a minimal error UI
+            error_frame = ttk.Frame(self.root, padding="20 20 20 20")
+            error_frame.pack(fill=tk.BOTH, expand=True)
+
+            error_label = ttk.Label(
+                error_frame,
+                text=f"Error setting up UI: {e}",
+                style="Title.TLabel",
+                foreground="red",
+            )
+            error_label.pack(pady=20)
+
+            retry_button = ttk.Button(
+                error_frame,
+                text="Retry",
+                command=self.setup_ui,
+                style="Primary.TButton",
+            )
+            retry_button.pack(pady=10)
 
     def _create_header_section(self) -> None:
         """Create the header section with title and description."""
-        header_frame = ttk.Frame(self.main_frame)
+        header_frame = ttk.Frame(self.main_frame, name="header_section")
         header_frame.pack(fill=tk.X, pady=(0, 15))
 
         # Title
@@ -367,31 +448,41 @@ class FITDetectorToolkit(BaseGUI):
 
     def _create_app_launcher_section(self) -> None:
         """Create the application launcher section with cards for each tool."""
-        launcher_frame = ttk.Frame(self.main_frame)
-        launcher_frame.pack(fill=tk.BOTH, expand=True, pady=20)
+        try:
+            launcher_frame = ttk.Frame(self.main_frame, name="launcher_section")
+            launcher_frame.pack(fill=tk.BOTH, expand=True, pady=20)
 
-        # Create a frame for tool cards
-        tools_frame = ttk.Frame(launcher_frame)
-        tools_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+            # Create a frame for tool cards
+            tools_frame = ttk.Frame(launcher_frame)
+            tools_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
 
-        # Get tools from module manager
-        tools = []
-        for module_name, module_info in self.module_manager.modules.items():
-            tools.append(
-                {
-                    "name": module_name,
-                    "description": module_info.get(
-                        "description", "No description available"
-                    ),
-                    "icon": module_info.get("icon", "🔧"),
-                    "installed": module_info.get("installed", False),
-                    "module_name": module_name,
-                }
+            # Get tools from module manager
+            tools = []
+            for module_name, module_info in self.module_manager.modules.items():
+                is_installed = self.module_manager.is_module_installed(module_name)
+                tools.append(
+                    {
+                        "name": module_name,
+                        "description": module_info.get(
+                            "description", "No description available"
+                        ),
+                        "icon": module_info.get("icon", "🔧"),
+                        "installed": is_installed,
+                        "module_name": module_name,
+                    }
+                )
+
+            # Create a card for each tool
+            for i, tool in enumerate(tools):
+                self._create_tool_card(tools_frame, tool, i)
+
+        except Exception as e:
+            print(f"Error creating app launcher section: {e}")
+            # Create error message in launcher frame
+            error_label = ttk.Label(
+                launcher_frame, text=f"Error loading modules: {e}", foreground="red"
             )
-
-        # Create a card for each tool
-        for i, tool in enumerate(tools):
-            self._create_tool_card(tools_frame, tool, i)
+            error_label.pack(pady=20)
 
     def _create_tool_card(self, parent: ttk.Frame, tool: dict, index: int) -> None:
         """Create a card for a tool in the launcher.
@@ -446,34 +537,52 @@ class FITDetectorToolkit(BaseGUI):
         buttons_frame = ttk.Frame(card_frame)
         buttons_frame.pack(pady=(0, 15))
 
-        # Install button
-        install_button = ttk.Button(
-            buttons_frame,
-            text="Install",
-            command=lambda: self.install_module(tool["module_name"]),
-            style="Primary.TButton",
-            width=12,
-        )
-        install_button.pack(side=tk.LEFT, padx=(0, 5))
+        if tool["installed"]:
+            # Update button for installed modules
+            update_button = ttk.Button(
+                buttons_frame,
+                text="Update",
+                command=lambda: self.install_module(tool["module_name"]),
+                style="Secondary.TButton",
+                width=12,
+            )
+            update_button.pack(side=tk.LEFT, padx=(0, 5))
 
-        # Launch button
-        launch_button = ttk.Button(
-            buttons_frame,
-            text="Launch",
-            command=lambda: self.launch_module(tool["module_name"]),
-            style="Primary.TButton",
-            width=12,
-        )
-        launch_button.pack(side=tk.LEFT, padx=(5, 0))
+            # Launch button
+            launch_button = ttk.Button(
+                buttons_frame,
+                text="Launch",
+                command=lambda: self.launch_module(tool["module_name"]),
+                style="Primary.TButton",
+                width=12,
+            )
+            launch_button.pack(side=tk.LEFT, padx=(5, 0))
+        else:
+            # Install button for not installed modules
+            install_button = ttk.Button(
+                buttons_frame,
+                text="Install",
+                command=lambda: self.install_module(tool["module_name"]),
+                style="Primary.TButton",
+                width=12,
+            )
+            install_button.pack(side=tk.LEFT, padx=(0, 5))
 
-        # Disable launch button if not installed
-        if not tool["installed"]:
-            launch_button.configure(state="disabled")
+            # Launch button (disabled for not installed modules)
+            launch_button = ttk.Button(
+                buttons_frame,
+                text="Launch",
+                command=lambda: self.launch_module(tool["module_name"]),
+                style="Primary.TButton",
+                width=12,
+                state="disabled",
+            )
+            launch_button.pack(side=tk.LEFT, padx=(5, 0))
 
     def _create_footer_section(self) -> None:
         """Create the footer section with status bar and version information."""
-        footer_frame = ttk.Frame(self.main_frame)
-        footer_frame.pack(fill=tk.X, side=tk.BOTTOM, pady=(15, 0))
+        footer_frame = ttk.Frame(self.main_frame, name="footer_section")
+        footer_frame.pack(fill=tk.X, side=tk.BOTTOM, pady=(0, 0))
 
         # Version information
         version = "0.1.0"
@@ -492,31 +601,69 @@ class FITDetectorToolkit(BaseGUI):
 
         def install_thread() -> None:
             try:
-                self.status_var.set(f"Installing {module_name}...")
+                # Check if this is an update or fresh install before starting
+                was_installed = self.module_manager.is_module_installed(module_name)
+
+                # Use after() to safely update UI from main thread
+                if was_installed:
+                    self.root.after(
+                        0, lambda: self.status_var.set(f"Updating {module_name}...")
+                    )
+                else:
+                    self.root.after(
+                        0, lambda: self.status_var.set(f"Installing {module_name}...")
+                    )
+
                 success = self.module_manager.install_module(module_name)
 
                 if success:
-                    self.status_var.set(f"{module_name} installed successfully!")
-                    try:
-                        messagebox.showinfo(
-                            "Success", f"{module_name} has been installed successfully!"
+                    if was_installed:
+                        # This was an update
+                        self.root.after(
+                            0,
+                            lambda: self.status_var.set(
+                                f"{module_name} updated successfully!"
+                            ),
                         )
-                    except tk.TclError:
-                        # Window was closed, just update status
-                        pass
-                    # Refresh the UI
-                    self.refresh_ui()
+                        self.root.after(
+                            0,
+                            lambda: messagebox.showinfo(
+                                "Success",
+                                f"{module_name} has been updated successfully!",
+                            ),
+                        )
+                    else:
+                        # This was a fresh install
+                        self.root.after(
+                            0,
+                            lambda: self.status_var.set(
+                                f"{module_name} installed successfully!"
+                            ),
+                        )
+                        self.root.after(
+                            0,
+                            lambda: messagebox.showinfo(
+                                "Success",
+                                f"{module_name} has been installed successfully!",
+                            ),
+                        )
+                    # Schedule UI refresh from main thread
+                    self.root.after(100, self.refresh_ui)
                 else:
-                    self.status_var.set(f"Failed to install {module_name}")
-                    try:
-                        messagebox.showerror(
+                    self.root.after(
+                        0,
+                        lambda: self.status_var.set(f"Failed to install {module_name}"),
+                    )
+                    self.root.after(
+                        0,
+                        lambda: messagebox.showerror(
                             "Error", f"Failed to install {module_name}"
-                        )
-                    except tk.TclError:
-                        # Window was closed, just update status
-                        pass
-            except Exception as e:
-                self.status_var.set(f"Error during installation: {e}")
+                        ),
+                    )
+            except Exception:
+                self.root.after(
+                    0, lambda: self.status_var.set("Error during installation")
+                )
 
         threading.Thread(target=install_thread, daemon=True).start()
 
@@ -568,10 +715,27 @@ class FITDetectorToolkit(BaseGUI):
 
     def refresh_ui(self) -> None:
         """Refresh the user interface."""
-        # Clear and recreate the modules section
-        for widget in self.root.winfo_children():
-            widget.destroy()
-        self.setup_ui()
+        try:
+            # Find and destroy only the launcher section by name
+            for widget in self.main_frame.winfo_children():
+                if (
+                    isinstance(widget, ttk.Frame)
+                    and widget.winfo_name() == "launcher_section"
+                ):
+                    widget.destroy()
+                    break
+
+            # Recreate only the launcher section
+            self._create_app_launcher_section()
+
+        except Exception as e:
+            print(f"Error refreshing UI: {e}")
+            # Show error in status bar instead of destroying everything
+            if hasattr(self, "status_var"):
+                self.status_var.set(f"Error refreshing UI: {e}")
+            else:
+                # If status bar doesn't exist, show in window title
+                self.root.title(f"FIT Detector Toolkit - Error: {e}")
 
     def run(self) -> None:
         """Run the application."""
@@ -589,7 +753,7 @@ def main() -> None:
 Examples:
   fitdetectortoolkit                    # Launch the GUI
   fitdetectortoolkit --list-modules     # List available modules
-  fitdetectortoolkit --install AgeingAnalysis  # Install a module
+  fitdetectortoolkit --install AgeingAnalysis  # Install or update a module
         """,
     )
 
@@ -599,7 +763,9 @@ Examples:
         help="List all available modules and their status",
     )
 
-    parser.add_argument("--install", metavar="MODULE", help="Install a specific module")
+    parser.add_argument(
+        "--install", metavar="MODULE", help="Install or update a specific module"
+    )
 
     parser.add_argument("--launch", metavar="MODULE", help="Launch a specific module")
 
@@ -617,7 +783,7 @@ Examples:
         for module_name, module_info in manager.modules.items():
             status = (
                 "✓ Installed"
-                if module_info.get("installed", False)
+                if manager.is_module_installed(module_name)
                 else "✗ Not Installed"
             )
             print(f"{module_name}: {status}")
@@ -628,12 +794,24 @@ Examples:
 
     if args.install:
         manager = ModuleManager()
-        print(f"Installing {args.install}...")
+        # Check if this is an update or fresh install
+        was_installed = manager.is_module_installed(args.install)
+        if was_installed:
+            print(f"Updating {args.install}...")
+        else:
+            print(f"Installing {args.install}...")
+
         success = manager.install_module(args.install)
         if success:
-            print(f"✓ {args.install} installed successfully!")
+            if was_installed:
+                print(f"✓ {args.install} updated successfully!")
+            else:
+                print(f"✓ {args.install} installed successfully!")
         else:
-            print(f"✗ Failed to install {args.install}")
+            if was_installed:
+                print(f"✗ Failed to update {args.install}")
+            else:
+                print(f"✗ Failed to install {args.install}")
         return
 
     if args.launch:

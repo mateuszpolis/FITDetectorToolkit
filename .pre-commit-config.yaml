@@ -33,7 +33,7 @@ repos:
     rev: v1.8.0
     hooks:
       - id: mypy
-        additional_dependencies: [types-requests]
+        additional_dependencies: [types-requests, types-setuptools]
         args: [--ignore-missing-imports]
 
   # Security checks (disabled due to false positives with subprocess)

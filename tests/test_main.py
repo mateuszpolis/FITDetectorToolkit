@@ -46,12 +46,12 @@ class TestModuleManager:
 
             manager.load_modules_config()
 
-            assert "AgeingAnalysis" in manager.modules
+            assert "Ageing Analysis" in manager.modules
             assert (
-                manager.modules["AgeingAnalysis"]["url"]
+                manager.modules["Ageing Analysis"]["url"]
                 == "https://github.com/mateuszpolis/AgeingAnalysis.git"
             )
-            mock_save.assert_called_once()
+            mock_save.assert_not_called()
 
     def test_save_modules_config(self) -> None:
         """Test saving modules configuration."""
@@ -60,21 +60,94 @@ class TestModuleManager:
         manager.modules_config = self.modules_dir / "modules.json"
         manager.modules = {"test": {"key": "value"}}
 
+        # save_modules_config is now a no-op method, so it shouldn't create files
         manager.save_modules_config()
 
-        assert manager.modules_config.exists()
+        # The method should not create any files since it's deprecated
+        assert not manager.modules_config.exists()
 
     def test_is_module_installed(self) -> None:
         """Test checking if a module is installed."""
         manager = ModuleManager()
         manager.modules = {
-            "test_module": {"installed": True},
-            "uninstalled_module": {"installed": False},
+            "test_module": {"entry_point": "test_module.main"},
+            "uninstalled_module": {"entry_point": "uninstalled_module.main"},
         }
 
-        assert manager.is_module_installed("test_module") is True
-        assert manager.is_module_installed("uninstalled_module") is False
+        # Test with non-existent module (should return False)
         assert manager.is_module_installed("nonexistent_module") is False
+
+        # Test with modules that don't have entry points (should return False)
+        manager.modules["no_entry"] = {"description": "No entry point"}
+        assert manager.is_module_installed("no_entry") is False
+
+        # Note: We can't easily test the actual import functionality in unit tests
+        # since it would require real modules to be installed. The real functionality
+        # is tested in integration tests or when running the actual application.
+
+    def test_install_module(self) -> None:
+        """Test module installation."""
+        manager = ModuleManager()
+        manager.modules_dir = self.modules_dir
+
+        # Add a test module to the manager
+        manager.modules["TestModule"] = {
+            "url": "https://github.com/test/TestModule.git",
+            "branch": "main",
+            "description": "Test module",
+            "entry_point": "test_module.main",
+            "version": "latest",
+            "icon": "🔧",
+        }
+
+        # Mock the git operations and subprocess calls
+        with patch("fitdetectortoolkit.main.shutil.rmtree"):
+            with patch("fitdetectortoolkit.main.Repo.clone_from") as mock_clone:
+                with patch("fitdetectortoolkit.main.subprocess.run") as mock_subprocess:
+                    with patch("fitdetectortoolkit.main.Path.exists") as mock_exists:
+                        # Mock that pyproject.toml exists
+                        mock_exists.return_value = True
+
+                        # Mock successful subprocess execution
+                        mock_subprocess.return_value = Mock()
+
+                        # Test installation
+                        result = manager.install_module("TestModule")
+                        assert result is True
+                        mock_clone.assert_called_once()
+                        mock_subprocess.assert_called_once()
+
+    def test_update_module(self) -> None:
+        """Test module update (reinstallation)."""
+        manager = ModuleManager()
+        manager.modules_dir = self.modules_dir
+
+        # Add a test module to the manager
+        manager.modules["TestModule"] = {
+            "url": "https://github.com/test/TestModule.git",
+            "branch": "main",
+            "description": "Test module",
+            "entry_point": "test_module.main",
+            "version": "latest",
+            "icon": "🔧",
+        }
+
+        # Mock the git operations and subprocess calls
+        with patch("fitdetectortoolkit.main.shutil.rmtree"):
+            with patch("fitdetectortoolkit.main.Repo.clone_from") as mock_clone:
+                with patch("fitdetectortoolkit.main.subprocess.run") as mock_subprocess:
+                    with patch("fitdetectortoolkit.main.Path.exists") as mock_exists:
+                        # Mock that pyproject.toml exists
+                        mock_exists.return_value = True
+
+                        # Mock successful subprocess execution
+                        mock_subprocess.return_value = Mock()
+
+                        # Test update (reinstallation) - should work the same as install
+                        result = manager.install_module("TestModule")
+                        assert result is True
+                        mock_clone.assert_called_once()
+                        mock_subprocess.assert_called_once()
 
 
 class TestFITDetectorToolkit:

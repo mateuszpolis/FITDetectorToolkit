@@ -1,0 +1,10 @@
+{
+  "Ageing Analysis": {
+    "url": "https://github.com/mateuszpolis/AgeingAnalysis.git",
+    "branch": "main",
+    "description": "Analyze and visualize ageing factors in the FIT detector.",
+    "entry_point": "ageing_analysis.main",
+    "version": "latest",
+    "icon": "📊"
+  }
+}

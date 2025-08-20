@@ -245,28 +245,28 @@ git checkout -b feature/add-new-module
 ```
 
 #### 3. **Add Module Configuration**
-Edit `fitdetectortoolkit/main.py` and add your module to the `modules` dictionary in the `ModuleManager.load_modules_config()` method:
+Edit `fitdetectortoolkit/config/modules.json` and add your module to the configuration:
 
-```python
-self.modules = {
-    "AgeingAnalysis": {
-        "url": "https://github.com/mateuszpolis/AgeingAnalysis.git",
-        "branch": "main",
-        "description": "Analyze and visualize ageing factors in the FIT detector.",
-        "entry_point": "ageing_analysis.main",
-        "installed": False,
-        "version": "latest",
-        "icon": "📊",
-    },
-    "YourNewModule": {  # Add your module here
-        "url": "https://github.com/yourusername/your-module.git",
-        "branch": "main",
-        "description": "Brief description of what your module does for FIT detector analysis.",
-        "entry_point": "your_module.main",
-        "installed": False,
-        "version": "latest",
-        "icon": "🔬",  # Choose an appropriate emoji icon
-    }
+```json
+{
+  "AgeingAnalysis": {
+    "url": "https://github.com/mateuszpolis/AgeingAnalysis.git",
+    "branch": "main",
+    "description": "Analyze and visualize ageing factors in the FIT detector.",
+    "entry_point": "ageing_analysis.main",
+    "installed": false,
+    "version": "latest",
+    "icon": "📊"
+  },
+  "YourNewModule": {
+    "url": "https://github.com/yourusername/your-module.git",
+    "branch": "main",
+    "description": "Brief description of what your module does for FIT detector analysis.",
+    "entry_point": "your_module.main",
+    "installed": false,
+    "version": "latest",
+    "icon": "🔬"
+  }
 }
 ```
 
@@ -281,7 +281,7 @@ python -m fitdetectortoolkit.main --install YourNewModule
 
 #### 5. **Commit and Push**
 ```bash
-git add fitdetectortoolkit/main.py
+git add fitdetectortoolkit/config/modules.json
 git commit -m "feat: add YourNewModule to toolkit
 
 - Add YourNewModule for FIT detector analysis
