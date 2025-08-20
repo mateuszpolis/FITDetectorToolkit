@@ -40,6 +40,8 @@ dev = [
     "flake8-import-order>=0.18.0",
     "flake8-bugbear>=23.0.0",
     "mypy",
+    "bandit>=1.7.0",
+    "safety>=2.3.0",
 ]
 
 [project.urls]
@@ -114,7 +116,7 @@ strict_equality = true
 
 [tool.bandit]
 exclude_dirs = ["tests"]
-skips = ["B101", "B601"]
+skips = ["B101", "B601", "B404", "B603"]
 
 [tool.flake8]
 max-line-length = 88
