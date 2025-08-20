@@ -34,6 +34,7 @@ dev = [
     "pytest>=7.0",
     "pytest-cov",
     "black",
+    "isort",
     "flake8>=6.0.0",
     "flake8-docstrings>=1.7.0",
     "flake8-import-order>=0.18.0",
