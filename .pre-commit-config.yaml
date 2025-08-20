@@ -19,7 +19,8 @@ repos:
     rev: 7.0.0
     hooks:
       - id: flake8
-        args: []
+        additional_dependencies:
+          - flake8-import-order==0.18.2
 
   # Import sorting
   - repo: https://github.com/pycqa/isort
