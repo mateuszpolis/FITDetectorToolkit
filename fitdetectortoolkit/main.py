@@ -200,10 +200,8 @@ class ModuleManager:
         # Try to load from the package config first
         try:
             config_data = (
-                importlib.resources.read_text(
-                    "fitdetectortoolkit", "config/modules.json"
-                )
-                .joinpath("modules.json")  # type: ignore
+                importlib.resources.files("fitdetectortoolkit.config")  # type: ignore
+                .joinpath("modules.json")
                 .read_text()
             )
             self.modules = json.loads(config_data)

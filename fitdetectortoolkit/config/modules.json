@@ -6,5 +6,13 @@
     "entry_point": "ageing_analysis.main",
     "version": "latest",
     "icon": "📊"
+  },
+  "Histogram Reader":  {
+    "url": "https://github.com/mateuszpolis/HistogramReader.git",
+    "branch": "main",
+    "description": "Visualize histograms from the FIT detector.",
+    "entry_point": "histogram_reader.main",
+    "version": "latest",
+    "icon": "🔍"
   }
 }
