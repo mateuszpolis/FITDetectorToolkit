@@ -190,6 +190,7 @@ class ModuleManager:
     """Manages the installation and execution of external modules."""
 
     def __init__(self) -> None:
+        """Initialize the ModuleManager with default configuration."""
         self.modules_dir = Path.home() / ".fitdetectortoolkit" / "modules"
         self.modules_dir.mkdir(parents=True, exist_ok=True)
         self.modules_config = self.modules_dir / "modules.json"
@@ -741,7 +742,7 @@ class FITDetectorToolkit(BaseGUI):
 
 
 def main() -> None:
-    """Main entry point for the application."""
+    """Launch the FIT Detector Toolkit application."""
     import argparse
 
     parser = argparse.ArgumentParser(
